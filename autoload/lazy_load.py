@@ -43,6 +43,13 @@ class LazyLoader(object):
     @classmethod
     def _generate_class_name_with_table_name(cls, table_name):
         return ''.join( map( lambda x: x.capitalize(), table_name.split('_') ) )
+
+    @classmethod
+    def map_table_to_class(cls, connection_url, mapper_list):
+        lazy_loader = LazyLoader( connection_url )
+        for table_name, class_name in mapper_list:
+            lazy_loader.load_class_for_table( table_name, class_name )
+        return 
         
 
 class ReDefinitionError(Exception):
@@ -55,4 +62,35 @@ class ReDefinitionError(Exception):
     def __repr__(self):
         return self.message
             
+
+def auto_load_register_table_class( configure_dict ):
+    """
+        configure_dict is a configure dict which contain connection , tables and mapper class name.
+        example as:
+        configure_dict = [
+            {
+                'mysql_url':'',
+                'mapper_list':[('table_name','class_name'),...]
+            },
+            ...
+        ]
+    """
+    for item in configure_dict:
+        LazyLoader.map_table_to_class( item['mysql_url'], item['mapper_list'] )
+    return 
+    
+
+if __name__ == '__main__':
+    MYSQL_URL = 'mysql+pymysql://siren:DCB01C3C1F197C2C0F7B2153522AD6E0768B9B1D@192.168.1.108:3307/comment?charset=utf8mb4'
+    configure_dict = []
+    comment_dict = {
+        'mysql_url':MYSQL_URL,
+        'mapper_list':[ ('thread_comment',None), ('topic_comment', 'MyTopicComment'), ('thread_comment_imgs', None) ]
+        }
+    configure_dict.append( comment_dict )
+    auto_load_register_table_class( configure_dict )
+
+    dir(ThreadComment)
+    dir( MyTopicComment )
+    dir( ThreadCommentImgs)
     
