@@ -35,9 +35,10 @@ class LazyLoader(object):
         CLASS = classobj( class_name, (object,), {} )
         mapper( CLASS, table )
         if class_name in globals():
-            raise ReDefinitionError( CLASS )
+            pass
         else:
-            globals()[class_name] = CLASS
+            globals()[ class_name ] = CLASS
+  
         return CLASS
 
     @classmethod
@@ -47,14 +48,15 @@ class LazyLoader(object):
     @classmethod
     def map_table_to_class(cls, connection_url, mapper_list):
         lazy_loader = LazyLoader( connection_url )
+        obj_list = []
         for table_name, class_name in mapper_list:
-            lazy_loader.load_class_for_table( table_name, class_name )
-        return 
+            obj_list.append( lazy_loader.load_class_for_table( table_name, class_name ) )
+        return obj_list
         
 
 class ReDefinitionError(Exception):
-    def __init__(selfi, class_type):
-        self.message = 'Threa already is a type named '+type(class_type)+' , you need changed you class now'
+    def __init__(self, class_type):
+        self.message = 'Threa already is a type named '+class_type+' , you need changed you class now'
 
     def __str__(self):
         return self.message
@@ -75,9 +77,10 @@ def auto_load_register_table_class( configure_dict ):
             ...
         ]
     """
+    res = []
     for item in configure_dict:
-        LazyLoader.map_table_to_class( item['mysql_url'], item['mapper_list'] )
-    return 
+        res.extend( LazyLoader.map_table_to_class( item['mysql_url'], item['mapper_list'] ) )
+    return res
     
 
 if __name__ == '__main__':
@@ -90,7 +93,3 @@ if __name__ == '__main__':
     configure_dict.append( comment_dict )
     auto_load_register_table_class( configure_dict )
 
-    dir(ThreadComment)
-    dir( MyTopicComment )
-    dir( ThreadCommentImgs)
-    
