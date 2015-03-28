@@ -9,6 +9,7 @@ And register this class in global.
 """
 
 from sqlalchemy.orm import mapper
+from sqlalchemy.engine import create_engine
 from sqlalchemy import Table, MetaData
 from sqlalchemy.ext.declarative import declarative_base 
 from new import classobj
@@ -16,19 +17,27 @@ from new import classobj
 
 class LazyLoader(object):
     metadata = {}    
+    engines = {}
 
     def __init__(self, connection_url):
         self.connection_url = connection_url
-        LazyLoader.metadata[ connection_url ] = None
+        #LazyLoader.metadata[ connection_url ] = None
+        #if not connection_url in LazyLoader.engines.keys():
+        #    LazyLoader.engines[connection_url] = create_engine(connection_url)
 
     def load_class_for_table(self, table_name, class_name=None):
-        if not LazyLoader.metadata[ self.connection_url ]:
-            metadata = MetaData( self.connection_url )
+        #if not LazyLoader.metadata[ self.connection_url ]:
+        if self.connection_url not in LazyLoader.metadata:
+            engine = create_engine(self.connection_url)
+            metadata = MetaData( bind=engine )
             LazyLoader.metadata[ self.connection_url ] = metadata
+            LazyLoader.engines[self.connection_url] = engine
         else:
             metadata = LazyLoader.metadata[ self.connection_url ]
+            engine = LazyLoader.engines[ self.connection_url ]
+            metadata.bind = engine
 
-        table = Table( table_name, metadata, autoload=True )
+        table = Table( table_name, metadata, autoload=True, autoload_with=engine )
         if class_name == None:
             class_name = LazyLoader._generate_class_name_with_table_name( table_name )
         
