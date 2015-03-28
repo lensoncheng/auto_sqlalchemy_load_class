@@ -8,7 +8,7 @@ And mapper this table with a class ;
 And register this class in global.
 """
 
-from sqlalchemy.orm import mapper
+from sqlalchemy.orm import mapper, sessionmaker
 from sqlalchemy.engine import create_engine
 from sqlalchemy import Table, MetaData
 from sqlalchemy.ext.declarative import declarative_base 
@@ -41,7 +41,7 @@ class LazyLoader(object):
         if class_name == None:
             class_name = LazyLoader._generate_class_name_with_table_name( table_name )
         
-        CLASS = classobj( class_name, (object,), {} )
+        CLASS = classobj( class_name, (object,), {'__table__':table, '__call__':lambda x:x.__table__.metadata.bind} )
         mapper( CLASS, table )
         if class_name in globals():
             pass
@@ -101,4 +101,5 @@ if __name__ == '__main__':
         }
     configure_dict.append( comment_dict )
     auto_load_register_table_class( configure_dict )
+    print ThreadComment.__table__.metadata.bind is MyTopicComment()()
 
